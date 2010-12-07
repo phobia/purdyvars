@@ -9,26 +9,10 @@
     //The suffix of our new variables.
     define('PURDYVARS_VARIABLE_SUFFIX', variable_get('purdyvars_suffix', '')); 
     
-    /**
-    * Node View Hook
-    * - apply the Purdyvars functionality to fields in the node before it's rendered
-    * 
-    * @param object $node The node object
-    * @param string $type The view mode, e.g. Full or Teaser
-    */
-    function purdyvars_node_view($node, $view_mode) {
-    return;    
-        require('purdyvars.inc');
         
-        $fields = purdyvars_extract_fields($node);
-        $variables = purdyvars_init_variables($fields, PURDYVARS_VARIABLE_PREFIX, PURDYVARS_VARIABLE_SUFFIX);
-        purdyvars_inject_variables($node, $variables);
-              
-    }
-    
-    
     /**
      * Implements hook_preprocess_node
+     * @param object $node The node object
      */
     function purdyvars_preprocess_node(&$node) {
 
