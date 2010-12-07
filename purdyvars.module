@@ -1,0 +1,121 @@
+<?php
+
+    //The prefix of the data in $node that we will target
+    define('PURDYVARS_TARGET', 'field_');
+    
+    //The prefix of our new variables. If this is field_ and suffix is blank, it will overwrite the variables set by Drupal. Which may mess with your existing templates.
+    define('PURDYVARS_VARIABLE_PREFIX', variable_get('purdyvars_prefix', 'field_')); 
+    
+    //The suffix of our new variables.
+    define('PURDYVARS_VARIABLE_SUFFIX', variable_get('purdyvars_suffix', '')); 
+    
+    /**
+    * Node View Hook
+    * - apply the Purdyvars functionality to fields in the node before it's rendered
+    * 
+    * @param object $node The node object
+    * @param string $type The view mode, e.g. Full or Teaser
+    */
+    function purdyvars_node_view($node, $view_mode) {
+    return;    
+        require('purdyvars.inc');
+        
+        $fields = purdyvars_extract_fields($node);
+        $variables = purdyvars_init_variables($fields, PURDYVARS_VARIABLE_PREFIX, PURDYVARS_VARIABLE_SUFFIX);
+        purdyvars_inject_variables($node, $variables);
+              
+    }
+    
+    
+    /**
+     * Implements hook_preprocess_node
+     */
+    function purdyvars_preprocess_node(&$node) {
+
+        require('purdyvars.inc');
+        
+        $fields = purdyvars_extract_fields($node);
+        $variables = purdyvars_init_variables($fields, PURDYVARS_VARIABLE_PREFIX, PURDYVARS_VARIABLE_SUFFIX);
+        purdyvars_inject_variables($node, $variables);
+
+    }
+    
+
+    /**
+     * Implements hook_menu
+     */
+    function purdyvars_menu() {
+        $items['admin/config/development/purdyvars'] = array(
+            'title' => 'Purdyvars settings',
+            'description' => 'Configure variable names for use in node templates.',
+            'content' => 'foooooooooo goes here',
+            'page callback' => 'drupal_get_form',
+            'page arguments' => array('purdyvars_admin_settings'),
+            'access arguments' => array('administer purdyvars'),
+        );
+        return $items;
+    }
+    
+    
+    /**
+     * Menu callback
+     */
+    function purdyvars_admin_settings() {
+        $form = array();
+        $form['purdyvars_overwrite_drupal'] = array(
+            '#type'=> 'radios',
+            '#title' => t('Variable names'),
+            '#default_value' => variable_get('purdyvars_overwrite_drupal', true),
+            '#options' => array(
+                true => t('Overwrite standard variables'),
+                false => t('Use custom variable names')
+            )
+        );
+
+        $form['fieldnaming'] = array(
+            '#type' => 'fieldset',
+            '#title' => t('Custom variable naming'),
+            '#tree' => TRUE,
+        );        
+
+        $form['fieldnaming']['purdyvars_prefix'] = array(
+            '#type'=> 'textfield',
+            '#title' => t('Field variable prefix'),
+            '#description' => t('This will be prepended to the field name, e.g. prefix_myfield'),
+            '#default_value' => variable_get('purdyvars_prefix', 'field_'),
+        );
+        $form['fieldnaming']['purdyvars_suffix'] = array(
+            '#type'=> 'textfield',
+            '#title' => t('Field variable suffix'),
+            '#description' => t('This will be appended to the field name, e.g. myfield_suffix'),
+            '#default_value' => variable_get('purdyvars_suffix', ''),
+        );
+        drupal_add_js(drupal_get_path('module', 'purdyvars') . '/purdyvars.preview.js');
+        return system_settings_form($form);
+    }
+     
+     
+
+    /**
+     * Implements hook_help().
+     */
+    function purdyvars_help($path, $arg) {
+        switch ($path) {
+            case 'admin/help#purdyvars':
+                $output  = '<h3>'. t('About') . '</h3>';
+                $output .= '<p>' . t('Purdyvars makes using fields from contents types in node templates a bit easier and easier to read.') . '</p>';
+                $output .= '<h3>'. t('Usage') . '</h3>';
+                $output .= '<p>' . t('If you in a node template, e.g. <em>node--mycontenttype.tpl.php</em> wanted to output a field you\'d have to use something like <code>&lt;?php echo $field_myfield[\'und\'][0][\'safe_value\']; ?&gt;</code>') . '</p>';
+                $output .= '<p>' . t('With Purdyvars you can do something like this instead: <code>&lt;?php echo $field_myfield ?&gt;</code>') . '</p>';
+                return $output;
+            break;
+            case 'admin/config/development/purdyvars':
+                $output  = '<h3>'. t('Name scheme for the field variables.') . '</h3>';
+                $output .= '<p>'. t('By default this will be field_<em>yourfieldname</em>, which in effect will overwrite the default variables that Drupal creates for you.') . '</p>';
+                $output .= '<p>'. t('If you allready have themes depending on the field variables, like e.g. <code>$field_yourfieldname[\'und\'][\'0\'][\'value\']</code>, you either have to rewrite your templates, or you can change the naming below.') . '</p>';
+                $output .= '';
+                return $output;
+            break;
+        }
+    }
+

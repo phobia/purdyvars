@@ -1,0 +1,7 @@
+name = Purdyvars
+description = Makes raw field variable values accessible in a tidy way in node templates.
+core = 7.x
+version = 0.1
+package = Purdyvars
+files[] = purdyvars.module
+configure = admin/config/development/purdyvars
